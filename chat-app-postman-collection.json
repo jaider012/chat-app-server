@@ -1,0 +1,379 @@
+{
+  "info": {
+    "name": "Chat App API",
+    "description": "API endpoints for Chat App with NestJS, Google OAuth, and WebSocket messaging",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3006/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Google OAuth - Initiate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Google OAuth - Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google/callback",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google", "callback"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": {
+            "id": "user-id-1",
+            "email": "user@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "profilePicture": "https://example.com/avatar.jpg",
+            "createdAt": "2025-07-08T12:00:00.000Z"
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": [
+            {
+              "id": "user-id-1",
+              "email": "user1@example.com",
+              "firstName": "John",
+              "lastName": "Doe",
+              "profilePicture": "https://example.com/avatar1.jpg"
+            },
+            {
+              "id": "user-id-2",
+              "email": "user2@example.com",
+              "firstName": "Jane",
+              "lastName": "Smith",
+              "profilePicture": "https://example.com/avatar2.jpg"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Create Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participantIds\": [\"user-id-1\", \"user-id-2\"],\n  \"name\": \"Chat Group Name (optional)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["conversations"]
+            }
+          },
+          "response": {
+            "id": "conversation-id-1",
+            "name": "Chat Group Name (optional)",
+            "participants": [
+              {
+                "id": "user-id-1",
+                "email": "user1@example.com"
+              },
+              {
+                "id": "user-id-2",
+                "email": "user2@example.com"
+              }
+            ],
+            "createdAt": "2025-07-08T12:00:00.000Z"
+          }
+        },
+        {
+          "name": "Get My Conversations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["conversations"]
+            }
+          },
+          "response": [
+            {
+              "id": "conversation-id-1",
+              "name": "Chat Group Name (optional)",
+              "participants": [
+                {
+                  "id": "user-id-1",
+                  "email": "user1@example.com"
+                },
+                {
+                  "id": "user-id-2",
+                  "email": "user2@example.com"
+                }
+              ],
+              "createdAt": "2025-07-08T12:00:00.000Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages from Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversation_id}}/messages?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": {
+            "items": [
+              {
+                "id": "message-id-1",
+                "content": "Hello, this is a test message!",
+                "sender": {
+                  "id": "user-id-1",
+                  "email": "user1@example.com"
+                },
+                "createdAt": "2025-07-08T12:01:00.000Z"
+              }
+            ],
+            "meta": {
+              "page": 1,
+              "limit": 50,
+              "totalItems": 1,
+              "totalPages": 1
+            }
+          }
+        },
+        {
+          "name": "Send Message (REST)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello, this is a test message!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversation_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages"]
+            }
+          },
+          "response": {
+            "id": "message-id-1",
+            "content": "Hello, this is a test message!",
+            "sender": {
+              "id": "user-id-1",
+              "email": "user1@example.com"
+            },
+            "createdAt": "2025-07-08T12:01:00.000Z"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-save JWT token from Google OAuth callback",
+          "if (pm.response.headers.get('Location') && pm.response.headers.get('Location').includes('token=')) {",
+          "    const url = pm.response.headers.get('Location');",
+          "    const token = url.split('token=')[1].split('&')[0];",
+          "    pm.collectionVariables.set('jwt_token', token);",
+          "    console.log('JWT token saved:', token);",
+          "}",
+          "",
+          "// Auto-save user ID from profile response",
+          "if (pm.response.json() && pm.response.json().id) {",
+          "    pm.collectionVariables.set('user_id', pm.response.json().id);",
+          "    console.log('User ID saved:', pm.response.json().id);",
+          "}",
+          "",
+          "// Auto-save conversation ID from create conversation response",
+          "if (pm.response.json() && pm.response.json().id && pm.request.url.toString().includes('/conversations') && pm.request.method === 'POST') {",
+          "    pm.collectionVariables.set('conversation_id', pm.response.json().id);",
+          "    console.log('Conversation ID saved:', pm.response.json().id);",
+          "}"
+        ]
+      }
+    }
+  ]
+}
