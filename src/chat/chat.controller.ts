@@ -138,14 +138,18 @@ export class ChatController {
   }
 
   @Get(":id/key-exchange/status")
-  async getKeyExchangeStatus(@Param("id", ParseUUIDPipe) conversationId: string) {
+  async getKeyExchangeStatus(
+    @Param("id", ParseUUIDPipe) conversationId: string,
+  ) {
     const status =
       await this.keyExchangeService.getKeyExchangeStatus(conversationId);
     return status;
   }
 
   @Get(":id/encryption-status")
-  async getEncryptionStatus(@Param("id", ParseUUIDPipe) conversationId: string) {
+  async getEncryptionStatus(
+    @Param("id", ParseUUIDPipe) conversationId: string,
+  ) {
     const status = await this.chatService.getEncryptionStatus(conversationId);
     return status;
   }

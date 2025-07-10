@@ -20,7 +20,7 @@ export class AuthController {
   googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     try {
       const result = this.authService.login(req.user as User);
-      
+
       // Validate redirect URL to prevent open redirect vulnerability
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       const allowedDomains = [
@@ -28,24 +28,24 @@ export class AuthController {
         "https://localhost:3000",
         frontendUrl,
       ];
-      
+
       if (!allowedDomains.includes(frontendUrl)) {
         throw new Error("Invalid redirect URL");
       }
-      
+
       const redirectUrl = `${frontendUrl}/auth/callback?token=${result.access_token}`;
       res.redirect(redirectUrl);
     } catch (error) {
       console.error("Google auth callback error:", error);
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      
+
       // Validate error redirect URL as well
       const allowedDomains = [
         "http://localhost:3000",
         "https://localhost:3000",
         frontendUrl,
       ];
-      
+
       if (allowedDomains.includes(frontendUrl)) {
         res.redirect(`${frontendUrl}/auth/error`);
       } else {

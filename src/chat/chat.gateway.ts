@@ -64,7 +64,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         handshake.headers.authorization?.replace("Bearer ", "");
 
       if (!token) {
-        console.warn(`WebSocket connection attempt without token from IP: ${client.handshake.address}`);
+        console.warn(
+          `WebSocket connection attempt without token from IP: ${client.handshake.address}`,
+        );
         client.emit("error", { message: "Authentication required" });
         client.disconnect();
         return;
@@ -78,7 +80,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       console.log(`User ${userId} connected with socket ${client.id}`);
     } catch (error) {
-      console.error(`WebSocket authentication error from IP ${client.handshake.address}:`, error.message);
+      console.error(
+        `WebSocket authentication error from IP ${client.handshake.address}:`,
+        error.message,
+      );
       client.emit("error", { message: "Invalid authentication token" });
       client.disconnect();
     }
