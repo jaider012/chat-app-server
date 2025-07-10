@@ -25,7 +25,14 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = process.env.PORT || "3006";
+  const port = process.env.PORT || 8080; // Default to 8080 for Cloud Run compatibility
+  if (process.env.NODE_ENV === "production") {
+    // In production, we can use a different port or configuration
+    console.log("Running in production mode");
+  } else {
+    // In development, we can use the default port
+    console.log("Running in development mode");
+  }
   await app.listen(port);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
