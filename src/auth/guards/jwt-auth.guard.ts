@@ -12,7 +12,8 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
   handleRequest(err: any, user: any): any {
     if (err || !user) {
-      console.log("Authentication failed");
+      // Use proper logging instead of console.log
+      console.warn("JWT authentication failed:", err?.message || "No user found");
       throw err || new Error("Unauthorized");
     }
 

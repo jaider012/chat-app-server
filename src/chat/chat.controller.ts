@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Request,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -62,7 +63,7 @@ export class ChatController {
 
   @Get(":id/messages")
   async getConversationMessages(
-    @Param("id") conversationId: string,
+    @Param("id", ParseUUIDPipe) conversationId: string,
     @Query() paginationDto: PaginationDto,
   ) {
     const messages = await this.chatService.getConversationMessages(
@@ -88,7 +89,7 @@ export class ChatController {
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 messages per minute
   async createMessage(
     @Request() req: Request & { user: { userId: string } },
-    @Param("id") conversationId: string,
+    @Param("id", ParseUUIDPipe) conversationId: string,
     @Body() createMessageDto: CreateMessageDto,
   ) {
     const message = await this.chatService.createMessage(
@@ -113,7 +114,7 @@ export class ChatController {
   @Post(":id/key-exchange/initiate")
   async initiateKeyExchange(
     @Request() req: Request & { user: { userId: string } },
-    @Param("id") conversationId: string,
+    @Param("id", ParseUUIDPipe) conversationId: string,
     @Body() initiateKeyExchangeDto: InitiateKeyExchangeDto,
   ) {
     const result = await this.keyExchangeService.initiateKeyExchange(
@@ -126,7 +127,7 @@ export class ChatController {
   @Post(":id/key-exchange/complete")
   async completeKeyExchange(
     @Request() req: Request & { user: { userId: string } },
-    @Param("id") conversationId: string,
+    @Param("id", ParseUUIDPipe) conversationId: string,
     @Body() completeKeyExchangeDto: CompleteKeyExchangeDto,
   ) {
     const result = await this.keyExchangeService.completeKeyExchange(
@@ -137,14 +138,14 @@ export class ChatController {
   }
 
   @Get(":id/key-exchange/status")
-  async getKeyExchangeStatus(@Param("id") conversationId: string) {
+  async getKeyExchangeStatus(@Param("id", ParseUUIDPipe) conversationId: string) {
     const status =
       await this.keyExchangeService.getKeyExchangeStatus(conversationId);
     return status;
   }
 
   @Get(":id/encryption-status")
-  async getEncryptionStatus(@Param("id") conversationId: string) {
+  async getEncryptionStatus(@Param("id", ParseUUIDPipe) conversationId: string) {
     const status = await this.chatService.getEncryptionStatus(conversationId);
     return status;
   }
