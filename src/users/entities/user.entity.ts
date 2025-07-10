@@ -6,13 +6,13 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToMany,
-} from 'typeorm';
-import { Message } from '../../chat/entities/message.entity';
-import { Conversation } from '../../chat/entities/conversation.entity';
+} from "typeorm";
+import { Message } from "../../chat/entities/message.entity";
+import { Conversation } from "../../chat/entities/conversation.entity";
 
-@Entity('users')
+@Entity("users")
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ unique: true })

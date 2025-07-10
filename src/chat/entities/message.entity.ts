@@ -5,46 +5,46 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-} from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Conversation } from './conversation.entity';
+} from "typeorm";
+import { User } from "../../users/entities/user.entity";
+import { Conversation } from "./conversation.entity";
 
-@Entity('messages')
+@Entity("messages")
 export class Message {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column('text')
+  @Column("text")
   content: string;
 
   // Campos para mensajes encriptados
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   ciphertext: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   nonce: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   signature: string;
 
-  @Column({ type: 'integer', nullable: true })
+  @Column({ type: "integer", nullable: true })
   sequenceNumber: number;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: "boolean", default: false })
   isEncrypted: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.messages)
-  @JoinColumn({ name: 'senderId' })
+  @JoinColumn({ name: "senderId" })
   sender: User;
 
   @Column()
   senderId: string;
 
   @ManyToOne(() => Conversation, (conversation) => conversation.messages)
-  @JoinColumn({ name: 'conversationId' })
+  @JoinColumn({ name: "conversationId" })
   conversation: Conversation;
 
   @Column()

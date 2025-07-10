@@ -1,7 +1,12 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { CryptoService } from './crypto.service';
-import { KeyExchangeService } from './key-exchange.service';
-import { EncryptedMessageDto } from './dto/key-exchange.dto';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from "@nestjs/common";
+import { CryptoService } from "./crypto.service";
+import { KeyExchangeService } from "./key-exchange.service";
+import { EncryptedMessageDto } from "./dto/key-exchange.dto";
 
 export interface EncryptedMessage {
   ciphertext: string;
@@ -41,31 +46,41 @@ export class MessageEncryptionService {
   ): Promise<EncryptedMessage> {
     try {
       // Verificar que el intercambio de claves esté completo
-      const conversationKeys = await this.keyExchangeService.getConversationKeys(conversationId);
-      if (!conversationKeys || conversationKeys.status !== 'completed') {
-        throw new BadRequestException('Key exchange not completed for this conversation');
+      const conversationKeys =
+        await this.keyExchangeService.getConversationKeys(conversationId);
+      if (!conversationKeys || conversationKeys.status !== "completed") {
+        throw new BadRequestException(
+          "Key exchange not completed for this conversation",
+        );
       }
 
       // Obtener el número de secuencia actual
-      const currentSequence = conversationKeys.participantKeys[senderId]?.sequenceNumber || 0;
+      const currentSequence =
+        conversationKeys.participantKeys[senderId]?.sequenceNumber || 0;
       const newSequence = currentSequence + 1;
 
       // Derivar la clave de mensaje usando double-ratchet
       if (!conversationKeys.sharedSecret) {
-        throw new BadRequestException('Shared secret not available');
+        throw new BadRequestException("Shared secret not available");
       }
-      
+
       const messageKey = this.cryptoService.deriveMessageKey(
         conversationKeys.sharedSecret,
         newSequence,
       );
 
       // Encriptar el mensaje
-      const { ciphertext, nonce } = this.cryptoService.encryptMessage(content, messageKey);
+      const { ciphertext, nonce } = this.cryptoService.encryptMessage(
+        content,
+        messageKey,
+      );
 
       // Crear el mensaje para firmar
       const messageToSign = `${conversationId}:${ciphertext}:${nonce}:${newSequence}`;
-      const signature = this.cryptoService.signMessage(messageToSign, privateSigningKey);
+      const signature = this.cryptoService.signMessage(
+        messageToSign,
+        privateSigningKey,
+      );
 
       // Actualizar el número de secuencia
       await this.keyExchangeService.updateParticipantSequence(
@@ -74,7 +89,9 @@ export class MessageEncryptionService {
         newSequence,
       );
 
-      this.logger.log(`Message encrypted for conversation ${conversationId}, sequence ${newSequence}`);
+      this.logger.log(
+        `Message encrypted for conversation ${conversationId}, sequence ${newSequence}`,
+      );
 
       return {
         ciphertext,
@@ -85,7 +102,7 @@ export class MessageEncryptionService {
         timestamp: new Date(),
       };
     } catch (error) {
-      this.logger.error('Error encrypting message', error);
+      this.logger.error("Error encrypting message", error);
       throw error;
     }
   }
@@ -99,15 +116,19 @@ export class MessageEncryptionService {
   ): Promise<DecryptedMessage> {
     try {
       // Verificar que el intercambio de claves esté completo
-      const conversationKeys = await this.keyExchangeService.getConversationKeys(conversationId);
-      if (!conversationKeys || conversationKeys.status !== 'completed') {
-        throw new BadRequestException('Key exchange not completed for this conversation');
+      const conversationKeys =
+        await this.keyExchangeService.getConversationKeys(conversationId);
+      if (!conversationKeys || conversationKeys.status !== "completed") {
+        throw new BadRequestException(
+          "Key exchange not completed for this conversation",
+        );
       }
 
       // Obtener las claves del remitente
-      const senderKeys = conversationKeys.participantKeys[encryptedMessage.senderId];
+      const senderKeys =
+        conversationKeys.participantKeys[encryptedMessage.senderId];
       if (!senderKeys) {
-        throw new NotFoundException('Sender keys not found');
+        throw new NotFoundException("Sender keys not found");
       }
 
       // Verificar la firma
@@ -118,9 +139,11 @@ export class MessageEncryptionService {
       );
 
       if (!verifiedMessage || verifiedMessage !== messageToVerify) {
-        this.logger.warn(`Invalid signature for message from ${encryptedMessage.senderId}`);
+        this.logger.warn(
+          `Invalid signature for message from ${encryptedMessage.senderId}`,
+        );
         return {
-          content: '',
+          content: "",
           senderId: encryptedMessage.senderId,
           timestamp: encryptedMessage.timestamp,
           sequenceNumber: encryptedMessage.sequenceNumber,
@@ -130,9 +153,9 @@ export class MessageEncryptionService {
 
       // Derivar la clave de mensaje
       if (!conversationKeys.sharedSecret) {
-        throw new BadRequestException('Shared secret not available');
+        throw new BadRequestException("Shared secret not available");
       }
-      
+
       const messageKey = this.cryptoService.deriveMessageKey(
         conversationKeys.sharedSecret,
         encryptedMessage.sequenceNumber,
@@ -145,7 +168,9 @@ export class MessageEncryptionService {
         encryptedMessage.nonce,
       );
 
-      this.logger.log(`Message decrypted for conversation ${conversationId}, sequence ${encryptedMessage.sequenceNumber}`);
+      this.logger.log(
+        `Message decrypted for conversation ${conversationId}, sequence ${encryptedMessage.sequenceNumber}`,
+      );
 
       return {
         content: decryptedContent,
@@ -155,11 +180,11 @@ export class MessageEncryptionService {
         isValid: true,
       };
     } catch (error) {
-      this.logger.error('Error decrypting message', error);
-      
+      this.logger.error("Error decrypting message", error);
+
       // Retornar mensaje inválido en caso de error
       return {
-        content: '',
+        content: "",
         senderId: encryptedMessage.senderId,
         timestamp: encryptedMessage.timestamp,
         sequenceNumber: encryptedMessage.sequenceNumber,
@@ -178,8 +203,9 @@ export class MessageEncryptionService {
   ): Promise<boolean> {
     try {
       // Verificar que el intercambio de claves esté completo
-      const conversationKeys = await this.keyExchangeService.getConversationKeys(conversationId);
-      if (!conversationKeys || conversationKeys.status !== 'completed') {
+      const conversationKeys =
+        await this.keyExchangeService.getConversationKeys(conversationId);
+      if (!conversationKeys || conversationKeys.status !== "completed") {
         return false;
       }
 
@@ -191,11 +217,14 @@ export class MessageEncryptionService {
 
       // Verificar la firma
       const messageToVerify = `${dto.conversationId}:${dto.ciphertext}:${dto.nonce}:${dto.sequenceNumber}`;
-      const verifiedMessage = this.cryptoService.verifySignature(dto.signature, senderKeys.signingKey);
+      const verifiedMessage = this.cryptoService.verifySignature(
+        dto.signature,
+        senderKeys.signingKey,
+      );
 
       return verifiedMessage === messageToVerify;
     } catch (error) {
-      this.logger.error('Error validating encrypted message', error);
+      this.logger.error("Error validating encrypted message", error);
       return false;
     }
   }
@@ -217,13 +246,14 @@ export class MessageEncryptionService {
    */
   async getEncryptionStatus(conversationId: string): Promise<{
     isEncrypted: boolean;
-    keyExchangeStatus: 'pending' | 'completed' | 'failed';
+    keyExchangeStatus: "pending" | "completed" | "failed";
     participantCount: number;
   }> {
-    const status = await this.keyExchangeService.getKeyExchangeStatus(conversationId);
-    
+    const status =
+      await this.keyExchangeService.getKeyExchangeStatus(conversationId);
+
     return {
-      isEncrypted: status.status === 'completed',
+      isEncrypted: status.status === "completed",
       keyExchangeStatus: status.status,
       participantCount: status.participantCount,
     };

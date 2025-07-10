@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { UsersService } from "../users/users.service";
+import { User } from "../users/entities/user.entity";
 
 @Injectable()
 export class AuthService {
@@ -32,8 +32,8 @@ export class AuthService {
 
       return user;
     } catch (error) {
-      console.error('Error validating OAuth user:', error);
-      throw new Error('Failed to validate OAuth user');
+      console.error("Error validating OAuth user:", error);
+      throw new Error("Failed to validate OAuth user");
     }
   }
 

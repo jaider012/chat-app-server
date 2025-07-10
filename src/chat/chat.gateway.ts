@@ -6,14 +6,17 @@ import {
   OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ChatService } from './chat.service';
-import { KeyExchangeService } from '../crypto/key-exchange.service';
-import { InitiateKeyExchangeDto, CompleteKeyExchangeDto } from '../crypto/dto/key-exchange.dto';
-import { CreateEncryptedMessageDto } from './dto/encrypted-message.dto';
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ChatService } from "./chat.service";
+import { KeyExchangeService } from "../crypto/key-exchange.service";
+import {
+  InitiateKeyExchangeDto,
+  CompleteKeyExchangeDto,
+} from "../crypto/dto/key-exchange.dto";
+import { CreateEncryptedMessageDto } from "./dto/encrypted-message.dto";
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -37,7 +40,7 @@ interface CustomHandshake {
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   },
 })
@@ -58,7 +61,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const handshake = client.handshake as CustomHandshake;
       const token =
         handshake.auth.token ||
-        handshake.headers.authorization?.replace('Bearer ', '');
+        handshake.headers.authorization?.replace("Bearer ", "");
 
       if (!token) {
         client.disconnect();
@@ -73,7 +76,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       console.log(`User ${userId} connected with socket ${client.id}`);
     } catch (error) {
-      console.error('WebSocket authentication error:', error);
+      console.error("WebSocket authentication error:", error);
       client.disconnect();
     }
   }
@@ -86,7 +89,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('sendMessage')
+  @SubscribeMessage("sendMessage")
   async handleSendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string; content: string },
@@ -99,7 +102,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Validate message content
       if (!data.content || data.content.trim().length === 0) {
-        client.emit('error', { message: 'Message content cannot be empty' });
+        client.emit("error", { message: "Message content cannot be empty" });
         return;
       }
 
@@ -115,7 +118,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.conversationId,
       );
       if (!conversation) {
-        client.emit('error', { message: 'Conversation not found' });
+        client.emit("error", { message: "Conversation not found" });
         return;
       }
 
@@ -137,16 +140,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       for (const participant of conversation.participants) {
         const participantSocketId = this.connectedUsers.get(participant.id);
         if (participantSocketId) {
-          this.server.to(participantSocketId).emit('newMessage', messageData);
+          this.server.to(participantSocketId).emit("newMessage", messageData);
         }
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      client.emit('error', { message: 'Failed to send message' });
+      console.error("Error sending message:", error);
+      client.emit("error", { message: "Failed to send message" });
     }
   }
 
-  @SubscribeMessage('startTyping')
+  @SubscribeMessage("startTyping")
   async handleStartTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string },
@@ -169,7 +172,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (participant.id !== userId) {
           const participantSocketId = this.connectedUsers.get(participant.id);
           if (participantSocketId) {
-            this.server.to(participantSocketId).emit('userTyping', {
+            this.server.to(participantSocketId).emit("userTyping", {
               conversationId: data.conversationId,
               userId: userId,
             });
@@ -177,11 +180,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
     } catch (error) {
-      console.error('Error handling typing:', error);
+      console.error("Error handling typing:", error);
     }
   }
 
-  @SubscribeMessage('stopTyping')
+  @SubscribeMessage("stopTyping")
   async handleStopTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string },
@@ -204,7 +207,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (participant.id !== userId) {
           const participantSocketId = this.connectedUsers.get(participant.id);
           if (participantSocketId) {
-            this.server.to(participantSocketId).emit('userStoppedTyping', {
+            this.server.to(participantSocketId).emit("userStoppedTyping", {
               conversationId: data.conversationId,
               userId: userId,
             });
@@ -212,11 +215,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
     } catch (error) {
-      console.error('Error handling stop typing:', error);
+      console.error("Error handling stop typing:", error);
     }
   }
 
-  @SubscribeMessage('initiateKeyExchange')
+  @SubscribeMessage("initiateKeyExchange")
   async handleInitiateKeyExchange(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: InitiateKeyExchangeDto,
@@ -227,18 +230,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const result = await this.keyExchangeService.initiateKeyExchange(userId, data);
-      
-      client.emit('keyExchangeInitiated', result);
+      const result = await this.keyExchangeService.initiateKeyExchange(
+        userId,
+        data,
+      );
+
+      client.emit("keyExchangeInitiated", result);
 
       // Notify other participants
-      const conversation = await this.chatService.getConversationById(data.conversationId);
+      const conversation = await this.chatService.getConversationById(
+        data.conversationId,
+      );
       if (conversation) {
         for (const participant of conversation.participants) {
           if (participant.id !== userId) {
             const participantSocketId = this.connectedUsers.get(participant.id);
             if (participantSocketId) {
-              this.server.to(participantSocketId).emit('keyExchangeRequest', {
+              this.server.to(participantSocketId).emit("keyExchangeRequest", {
                 conversationId: data.conversationId,
                 from: userId,
                 publicKey: data.publicKey,
@@ -249,12 +257,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
     } catch (error) {
-      console.error('Error initiating key exchange:', error);
-      client.emit('error', { message: 'Failed to initiate key exchange' });
+      console.error("Error initiating key exchange:", error);
+      client.emit("error", { message: "Failed to initiate key exchange" });
     }
   }
 
-  @SubscribeMessage('completeKeyExchange')
+  @SubscribeMessage("completeKeyExchange")
   async handleCompleteKeyExchange(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: CompleteKeyExchangeDto,
@@ -265,34 +273,43 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const result = await this.keyExchangeService.completeKeyExchange(userId, data);
-      
-      client.emit('keyExchangeCompleted', result);
+      const result = await this.keyExchangeService.completeKeyExchange(
+        userId,
+        data,
+      );
+
+      client.emit("keyExchangeCompleted", result);
 
       // Notify other participants if key exchange is complete
-      if (result.success && result.message.includes('completed')) {
-        const conversation = await this.chatService.getConversationById(data.conversationId);
+      if (result.success && result.message.includes("completed")) {
+        const conversation = await this.chatService.getConversationById(
+          data.conversationId,
+        );
         if (conversation) {
           for (const participant of conversation.participants) {
             if (participant.id !== userId) {
-              const participantSocketId = this.connectedUsers.get(participant.id);
+              const participantSocketId = this.connectedUsers.get(
+                participant.id,
+              );
               if (participantSocketId) {
-                this.server.to(participantSocketId).emit('keyExchangeCompleted', {
-                  conversationId: data.conversationId,
-                  status: 'completed',
-                });
+                this.server
+                  .to(participantSocketId)
+                  .emit("keyExchangeCompleted", {
+                    conversationId: data.conversationId,
+                    status: "completed",
+                  });
               }
             }
           }
         }
       }
     } catch (error) {
-      console.error('Error completing key exchange:', error);
-      client.emit('error', { message: 'Failed to complete key exchange' });
+      console.error("Error completing key exchange:", error);
+      client.emit("error", { message: "Failed to complete key exchange" });
     }
   }
 
-  @SubscribeMessage('sendEncryptedMessage')
+  @SubscribeMessage("sendEncryptedMessage")
   async handleSendEncryptedMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: CreateEncryptedMessageDto,
@@ -304,23 +321,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Validate message content
-      if (data.isEncrypted && (!data.ciphertext || !data.nonce || !data.signature)) {
-        client.emit('error', { message: 'Invalid encrypted message format' });
+      if (
+        data.isEncrypted &&
+        (!data.ciphertext || !data.nonce || !data.signature)
+      ) {
+        client.emit("error", { message: "Invalid encrypted message format" });
         return;
       }
 
-      if (!data.isEncrypted && (!data.content || data.content.trim().length === 0)) {
-        client.emit('error', { message: 'Message content cannot be empty' });
+      if (
+        !data.isEncrypted &&
+        (!data.content || data.content.trim().length === 0)
+      ) {
+        client.emit("error", { message: "Message content cannot be empty" });
         return;
       }
 
       // Create message in database
-      const message = await this.chatService.createEncryptedMessage(userId, data);
+      const message = await this.chatService.createEncryptedMessage(
+        userId,
+        data,
+      );
 
       // Get conversation participants
-      const conversation = await this.chatService.getConversationById(data.conversationId);
+      const conversation = await this.chatService.getConversationById(
+        data.conversationId,
+      );
       if (!conversation) {
-        client.emit('error', { message: 'Conversation not found' });
+        client.emit("error", { message: "Conversation not found" });
         return;
       }
 
@@ -347,16 +375,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       for (const participant of conversation.participants) {
         const participantSocketId = this.connectedUsers.get(participant.id);
         if (participantSocketId) {
-          this.server.to(participantSocketId).emit('newMessage', messageData);
+          this.server.to(participantSocketId).emit("newMessage", messageData);
         }
       }
     } catch (error) {
-      console.error('Error sending encrypted message:', error);
-      client.emit('error', { message: 'Failed to send encrypted message' });
+      console.error("Error sending encrypted message:", error);
+      client.emit("error", { message: "Failed to send encrypted message" });
     }
   }
 
-  @SubscribeMessage('getEncryptionStatus')
+  @SubscribeMessage("getEncryptionStatus")
   async handleGetEncryptionStatus(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string },
@@ -367,14 +395,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const status = await this.chatService.getEncryptionStatus(data.conversationId);
-      client.emit('encryptionStatus', {
+      const status = await this.chatService.getEncryptionStatus(
+        data.conversationId,
+      );
+      client.emit("encryptionStatus", {
         conversationId: data.conversationId,
         ...status,
       });
     } catch (error) {
-      console.error('Error getting encryption status:', error);
-      client.emit('error', { message: 'Failed to get encryption status' });
+      console.error("Error getting encryption status:", error);
+      client.emit("error", { message: "Failed to get encryption status" });
     }
   }
 }

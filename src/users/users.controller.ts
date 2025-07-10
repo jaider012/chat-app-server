@@ -1,6 +1,6 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { UsersService } from './users.service';
+import { Controller, Get, UseGuards, Request } from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { UsersService } from "./users.service";
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -9,16 +9,16 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-@Controller('users')
+@Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('me')
+  @Get("me")
   @UseGuards(JwtAuthGuard)
   async getMe(@Request() req: AuthenticatedRequest) {
     const user = await this.usersService.findById(req.user.userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     return {

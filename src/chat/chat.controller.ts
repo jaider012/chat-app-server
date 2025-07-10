@@ -7,17 +7,20 @@ import {
   Query,
   UseGuards,
   Request,
-} from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ChatService } from './chat.service';
-import { CreateConversationDto } from './dto/create-conversation.dto';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { PaginationDto } from './dto/pagination.dto';
-import { KeyExchangeService } from '../crypto/key-exchange.service';
-import { InitiateKeyExchangeDto, CompleteKeyExchangeDto } from '../crypto/dto/key-exchange.dto';
+} from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ChatService } from "./chat.service";
+import { CreateConversationDto } from "./dto/create-conversation.dto";
+import { CreateMessageDto } from "./dto/create-message.dto";
+import { PaginationDto } from "./dto/pagination.dto";
+import { KeyExchangeService } from "../crypto/key-exchange.service";
+import {
+  InitiateKeyExchangeDto,
+  CompleteKeyExchangeDto,
+} from "../crypto/dto/key-exchange.dto";
 
-@Controller('conversations')
+@Controller("conversations")
 @UseGuards(JwtAuthGuard)
 export class ChatController {
   constructor(
@@ -57,9 +60,9 @@ export class ChatController {
     }));
   }
 
-  @Get(':id/messages')
+  @Get(":id/messages")
   async getConversationMessages(
-    @Param('id') conversationId: string,
+    @Param("id") conversationId: string,
     @Query() paginationDto: PaginationDto,
   ) {
     const messages = await this.chatService.getConversationMessages(
@@ -81,11 +84,11 @@ export class ChatController {
     }));
   }
 
-  @Post(':id/messages')
+  @Post(":id/messages")
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 messages per minute
   async createMessage(
     @Request() req: Request & { user: { userId: string } },
-    @Param('id') conversationId: string,
+    @Param("id") conversationId: string,
     @Body() createMessageDto: CreateMessageDto,
   ) {
     const message = await this.chatService.createMessage(
@@ -107,10 +110,10 @@ export class ChatController {
     };
   }
 
-  @Post(':id/key-exchange/initiate')
+  @Post(":id/key-exchange/initiate")
   async initiateKeyExchange(
     @Request() req: Request & { user: { userId: string } },
-    @Param('id') conversationId: string,
+    @Param("id") conversationId: string,
     @Body() initiateKeyExchangeDto: InitiateKeyExchangeDto,
   ) {
     const result = await this.keyExchangeService.initiateKeyExchange(
@@ -120,10 +123,10 @@ export class ChatController {
     return result;
   }
 
-  @Post(':id/key-exchange/complete')
+  @Post(":id/key-exchange/complete")
   async completeKeyExchange(
     @Request() req: Request & { user: { userId: string } },
-    @Param('id') conversationId: string,
+    @Param("id") conversationId: string,
     @Body() completeKeyExchangeDto: CompleteKeyExchangeDto,
   ) {
     const result = await this.keyExchangeService.completeKeyExchange(
@@ -133,21 +136,24 @@ export class ChatController {
     return result;
   }
 
-  @Get(':id/key-exchange/status')
-  async getKeyExchangeStatus(@Param('id') conversationId: string) {
-    const status = await this.keyExchangeService.getKeyExchangeStatus(conversationId);
+  @Get(":id/key-exchange/status")
+  async getKeyExchangeStatus(@Param("id") conversationId: string) {
+    const status =
+      await this.keyExchangeService.getKeyExchangeStatus(conversationId);
     return status;
   }
 
-  @Get(':id/encryption-status')
-  async getEncryptionStatus(@Param('id') conversationId: string) {
+  @Get(":id/encryption-status")
+  async getEncryptionStatus(@Param("id") conversationId: string) {
     const status = await this.chatService.getEncryptionStatus(conversationId);
     return status;
   }
 
-  @Post('generate-keys')
+  @Post("generate-keys")
   async generateKeys(@Request() req: Request & { user: { userId: string } }) {
-    const keys = await this.keyExchangeService.generateUserKeys(req.user.userId);
+    const keys = await this.keyExchangeService.generateUserKeys(
+      req.user.userId,
+    );
     return {
       publicKey: keys.publicKey,
       signingKey: keys.signingKey,

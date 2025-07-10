@@ -116,17 +116,18 @@ export class ChatService {
   ): Promise<Message> {
     // Validar el mensaje encriptado si está presente
     if (dto.isEncrypted && dto.ciphertext && dto.nonce && dto.signature) {
-      const isValid = await this.messageEncryptionService.validateEncryptedMessage(
-        dto.conversationId,
-        {
-          conversationId: dto.conversationId,
-          ciphertext: dto.ciphertext,
-          nonce: dto.nonce,
-          sequenceNumber: dto.sequenceNumber.toString(),
-          signature: dto.signature,
-        },
-        senderId,
-      );
+      const isValid =
+        await this.messageEncryptionService.validateEncryptedMessage(
+          dto.conversationId,
+          {
+            conversationId: dto.conversationId,
+            ciphertext: dto.ciphertext,
+            nonce: dto.nonce,
+            sequenceNumber: dto.sequenceNumber.toString(),
+            signature: dto.signature,
+          },
+          senderId,
+        );
 
       if (!isValid) {
         throw new Error("Invalid encrypted message");
@@ -136,7 +137,7 @@ export class ChatService {
     const message = this.messageRepository.create({
       senderId,
       conversationId: dto.conversationId,
-      content: dto.content || '',
+      content: dto.content || "",
       ciphertext: dto.ciphertext,
       nonce: dto.nonce,
       signature: dto.signature,
@@ -172,9 +173,11 @@ export class ChatService {
 
   async getEncryptionStatus(conversationId: string): Promise<{
     isEncrypted: boolean;
-    keyExchangeStatus: 'pending' | 'completed' | 'failed';
+    keyExchangeStatus: "pending" | "completed" | "failed";
     participantCount: number;
   }> {
-    return await this.messageEncryptionService.getEncryptionStatus(conversationId);
+    return await this.messageEncryptionService.getEncryptionStatus(
+      conversationId,
+    );
   }
 }

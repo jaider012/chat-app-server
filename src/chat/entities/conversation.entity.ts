@@ -6,13 +6,13 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
-} from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Message } from './message.entity';
+} from "typeorm";
+import { User } from "../../users/entities/user.entity";
+import { Message } from "./message.entity";
 
-@Entity('conversations')
+@Entity("conversations")
 export class Conversation {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @CreateDateColumn()
@@ -23,9 +23,9 @@ export class Conversation {
 
   @ManyToMany(() => User, (user) => user.conversations)
   @JoinTable({
-    name: 'conversation_participants',
-    joinColumn: { name: 'conversationId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+    name: "conversation_participants",
+    joinColumn: { name: "conversationId", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "userId", referencedColumnName: "id" },
   })
   participants: User[];
 

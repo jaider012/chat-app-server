@@ -1,6 +1,6 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { Request } from 'express';
+import { Injectable, ExecutionContext } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { Request } from "express";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -17,14 +17,14 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     if (userId) {
       return userId;
     }
-    return req.ip || 'unknown';
+    return req.ip || "unknown";
   }
 
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     // Skip throttling for health endpoint
-    if (request.url === '/api/health') {
+    if (request.url === "/api/health") {
       return true;
     }
 
