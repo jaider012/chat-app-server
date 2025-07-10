@@ -7,7 +7,7 @@ import { User } from "./entities/user.entity";
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
   ) {}
 
   async findByGoogleId(googleId: string): Promise<User | null> {
@@ -42,12 +42,12 @@ export class UsersService {
       .createQueryBuilder("user")
       .where("user.id != :currentUserId", { currentUserId })
       .andWhere(
-        'user.id NOT IN ' +
+        "user.id NOT IN " +
           '(SELECT DISTINCT cp."userId" ' +
-          'FROM conversation_participants cp ' +
+          "FROM conversation_participants cp " +
           'INNER JOIN conversation_participants cp2 ON cp2."conversationId" = cp."conversationId" ' +
           'WHERE cp2."userId" = :currentUserId AND cp."userId" != :currentUserId)',
-        { currentUserId }
+        { currentUserId },
       )
       .getMany();
   }
