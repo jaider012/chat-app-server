@@ -17,6 +17,22 @@ export class Message {
   @Column('text')
   content: string;
 
+  // Campos para mensajes encriptados
+  @Column({ type: 'text', nullable: true })
+  ciphertext: string;
+
+  @Column({ type: 'text', nullable: true })
+  nonce: string;
+
+  @Column({ type: 'text', nullable: true })
+  signature: string;
+
+  @Column({ type: 'integer', nullable: true })
+  sequenceNumber: number;
+
+  @Column({ type: 'boolean', default: false })
+  isEncrypted: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

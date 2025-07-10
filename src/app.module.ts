@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ChatModule } from './chat/chat.module';
+import { CryptoModule } from './crypto/crypto.module';
 import { HealthController } from './health/health.controller';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 
@@ -34,6 +35,7 @@ import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
     AuthModule,
     UsersModule,
     ChatModule,
+    CryptoModule,
   ],
   controllers: [HealthController],
   providers: [

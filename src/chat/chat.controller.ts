@@ -14,11 +14,16 @@ import { ChatService } from './chat.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { PaginationDto } from './dto/pagination.dto';
+import { KeyExchangeService } from '../crypto/key-exchange.service';
+import { InitiateKeyExchangeDto, CompleteKeyExchangeDto } from '../crypto/dto/key-exchange.dto';
 
 @Controller('conversations')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly keyExchangeService: KeyExchangeService,
+  ) {}
 
   @Post()
   async createConversation(
@@ -99,6 +104,54 @@ export class ChatController {
         lastName: message.sender.lastName,
         profilePicture: message.sender.profilePicture,
       },
+    };
+  }
+
+  @Post(':id/key-exchange/initiate')
+  async initiateKeyExchange(
+    @Request() req: Request & { user: { userId: string } },
+    @Param('id') conversationId: string,
+    @Body() initiateKeyExchangeDto: InitiateKeyExchangeDto,
+  ) {
+    const result = await this.keyExchangeService.initiateKeyExchange(
+      req.user.userId,
+      { ...initiateKeyExchangeDto, conversationId },
+    );
+    return result;
+  }
+
+  @Post(':id/key-exchange/complete')
+  async completeKeyExchange(
+    @Request() req: Request & { user: { userId: string } },
+    @Param('id') conversationId: string,
+    @Body() completeKeyExchangeDto: CompleteKeyExchangeDto,
+  ) {
+    const result = await this.keyExchangeService.completeKeyExchange(
+      req.user.userId,
+      { ...completeKeyExchangeDto, conversationId },
+    );
+    return result;
+  }
+
+  @Get(':id/key-exchange/status')
+  async getKeyExchangeStatus(@Param('id') conversationId: string) {
+    const status = await this.keyExchangeService.getKeyExchangeStatus(conversationId);
+    return status;
+  }
+
+  @Get(':id/encryption-status')
+  async getEncryptionStatus(@Param('id') conversationId: string) {
+    const status = await this.chatService.getEncryptionStatus(conversationId);
+    return status;
+  }
+
+  @Post('generate-keys')
+  async generateKeys(@Request() req: Request & { user: { userId: string } }) {
+    const keys = await this.keyExchangeService.generateUserKeys(req.user.userId);
+    return {
+      publicKey: keys.publicKey,
+      signingKey: keys.signingKey,
+      // No devolvemos las claves privadas por seguridad
     };
   }
 }
