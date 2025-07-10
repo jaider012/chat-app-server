@@ -46,6 +46,6 @@ USER nestjs
 # Expose port (Cloud Run uses PORT env var)
 EXPOSE 8080
 ENV PORT=8080
-z
+
 # Start the application
 CMD ["node", "dist/main"]
