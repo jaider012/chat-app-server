@@ -17,7 +17,19 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:drop": "docker-compose exec postgres psql -U postgres -c \"DROP DATABASE IF EXISTS chat_app;\"",
+    "db:create": "docker-compose exec postgres psql -U postgres -c \"CREATE DATABASE chat_app;\"",
+    "db:reset": "npm run db:drop && npm run db:create",
+    "db:clean": "docker-compose down -v && docker-compose up -d",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/data-source.ts",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:security": "npm audit --audit-level=moderate",
+    "docker:build": "docker build -t chat-app-server .",
+    "docker:run": "docker run -p 3006:3006 chat-app-server"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

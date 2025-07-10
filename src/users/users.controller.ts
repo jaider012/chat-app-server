@@ -33,8 +33,8 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getUsers() {
-    const users = await this.usersService.findAll();
+  async getUsers(@Request() req: AuthenticatedRequest) {
+    const users = await this.usersService.findAvailableUsers(req.user.userId);
     return users.map((user) => ({
       id: user.id,
       email: user.email,

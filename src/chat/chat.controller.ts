@@ -8,6 +8,7 @@ import {
   UseGuards,
   Request,
   ParseUUIDPipe,
+  Delete,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -164,5 +165,18 @@ export class ChatController {
       signingKey: keys.signingKey,
       // No devolvemos las claves privadas por seguridad
     };
+  }
+
+  @Delete(":id")
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 deletions per minute
+  async deleteConversation(
+    @Request() req: Request & { user: { userId: string } },
+    @Param("id", ParseUUIDPipe) conversationId: string,
+  ) {
+    const result = await this.chatService.deleteConversation(
+      conversationId,
+      req.user.userId,
+    );
+    return result;
   }
 }

@@ -7,7 +7,7 @@ import { User } from "./entities/user.entity";
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userRepository: Repository<User>
   ) {}
 
   async findByGoogleId(googleId: string): Promise<User | null> {
@@ -34,5 +34,21 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
+  }
+
+  async findAvailableUsers(currentUserId: string): Promise<User[]> {
+    // Get users excluding current user and users with existing conversations
+    return this.userRepository
+      .createQueryBuilder("user")
+      .where("user.id != :currentUserId", { currentUserId })
+      .andWhere(
+        'user.id NOT IN ' +
+          '(SELECT DISTINCT cp."userId" ' +
+          'FROM conversation_participants cp ' +
+          'INNER JOIN conversation_participants cp2 ON cp2."conversationId" = cp."conversationId" ' +
+          'WHERE cp2."userId" = :currentUserId AND cp."userId" != :currentUserId)',
+        { currentUserId }
+      )
+      .getMany();
   }
 }

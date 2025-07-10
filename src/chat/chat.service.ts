@@ -180,4 +180,39 @@ export class ChatService {
       conversationId,
     );
   }
+
+  async deleteConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    // Verify user is a participant in the conversation
+    const conversation = await this.conversationRepository
+      .createQueryBuilder("conversation")
+      .leftJoinAndSelect("conversation.participants", "participant")
+      .where("conversation.id = :conversationId", { conversationId })
+      .getOne();
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.id === userId,
+    );
+
+    if (!isParticipant) {
+      throw new Error("User is not a participant in this conversation");
+    }
+
+    // Delete all messages in the conversation first
+    await this.messageRepository.delete({ conversationId });
+
+    // Delete the conversation
+    await this.conversationRepository.delete(conversationId);
+
+    return {
+      success: true,
+      message: "Conversation deleted successfully",
+    };
+  }
 }
