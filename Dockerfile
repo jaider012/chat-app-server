@@ -51,4 +51,4 @@ EXPOSE 8080
 ENV PORT=8080
 
 # Start the application
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:prod", "--host", "0.0.0.0", "--port", "8080"]
