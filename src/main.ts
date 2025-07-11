@@ -33,8 +33,8 @@ async function bootstrap() {
     // In development, we can use the default port
     console.log("Running in development mode");
   }
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  await app.listen(port, '0.0.0.0'); // Listen on all interfaces for Cloud Run
+  console.log(`Application is running on: http://0.0.0.0:${port}`);
 }
 
 void bootstrap();
