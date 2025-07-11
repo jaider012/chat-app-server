@@ -2,7 +2,11 @@ import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { UserKeys } from "./entities/user-keys.entity";
-import * as sodium from "sodium-native";
+import { ed25519 } from "@noble/curves/ed25519";
+import { x25519 } from "@noble/curves/ed25519";
+import { chacha20poly1305 } from "@noble/ciphers/chacha";
+import { randomBytes } from "@noble/hashes/utils";
+import { blake3 } from "@noble/hashes/blake3";
 
 export interface KeyPair {
   publicKey: string;
@@ -27,14 +31,12 @@ export class CryptoService {
    * Genera un par de claves X25519 para intercambio de claves
    */
   generateKeyPair(): KeyPair {
-    const publicKey = Buffer.alloc(sodium.crypto_box_PUBLICKEYBYTES);
-    const secretKey = Buffer.alloc(sodium.crypto_box_SECRETKEYBYTES);
-
-    sodium.crypto_box_keypair(publicKey, secretKey);
+    const secretKey = randomBytes(32);
+    const publicKey = x25519.getPublicKey(secretKey);
 
     return {
-      publicKey: publicKey.toString("base64"),
-      secretKey: secretKey.toString("base64"),
+      publicKey: Buffer.from(publicKey).toString("base64"),
+      secretKey: Buffer.from(secretKey).toString("base64"),
     };
   }
 
@@ -42,14 +44,12 @@ export class CryptoService {
    * Genera un par de claves Ed25519 para firma digital
    */
   generateSigningKeyPair(): SigningKeyPair {
-    const publicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES);
-    const secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
-
-    sodium.crypto_sign_keypair(publicKey, secretKey);
+    const secretKey = ed25519.utils.randomPrivateKey();
+    const publicKey = ed25519.getPublicKey(secretKey);
 
     return {
-      publicKey: publicKey.toString("base64"),
-      secretKey: secretKey.toString("base64"),
+      publicKey: Buffer.from(publicKey).toString("base64"),
+      secretKey: Buffer.from(secretKey).toString("base64"),
     };
   }
 
@@ -57,22 +57,16 @@ export class CryptoService {
    * Deriva una clave simétrica usando X25519
    */
   deriveSharedSecret(mySecretKey: string, theirPublicKey: string): string {
-    const sharedSecret = Buffer.alloc(32); // 256 bits
     const mySecretKeyBuffer = Buffer.from(mySecretKey, "base64");
     const theirPublicKeyBuffer = Buffer.from(theirPublicKey, "base64");
 
-    // Usar crypto_scalarmult para derivar el secreto compartido
-    sodium.crypto_scalarmult(
-      sharedSecret,
-      mySecretKeyBuffer,
-      theirPublicKeyBuffer,
-    );
+    const sharedSecret = x25519.getSharedSecret(mySecretKeyBuffer, theirPublicKeyBuffer);
 
-    return sharedSecret.toString("base64");
+    return Buffer.from(sharedSecret).toString("base64");
   }
 
   /**
-   * Encripta un mensaje usando AES-256-GCM
+   * Encripta un mensaje usando ChaCha20-Poly1305
    */
   encryptMessage(
     message: string,
@@ -81,35 +75,19 @@ export class CryptoService {
   ): { ciphertext: string; nonce: string } {
     const messageBuffer = Buffer.from(message, "utf8");
     const keyBuffer = Buffer.from(sharedSecret, "base64");
-    const nonceBuffer = nonce
-      ? Buffer.from(nonce, "base64")
-      : Buffer.alloc(sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+    const nonceBuffer = nonce ? Buffer.from(nonce, "base64") : randomBytes(12);
 
-    if (!nonce) {
-      sodium.randombytes_buf(nonceBuffer);
-    }
-
-    const ciphertext = Buffer.alloc(
-      messageBuffer.length + sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES,
-    );
-
-    sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
-      ciphertext,
-      messageBuffer,
-      null, // No additional data
-      null, // No secret nonce
-      nonceBuffer,
-      keyBuffer,
-    );
+    const chacha = chacha20poly1305(keyBuffer, nonceBuffer);
+    const ciphertext = chacha.encrypt(messageBuffer);
 
     return {
-      ciphertext: ciphertext.toString("base64"),
-      nonce: nonceBuffer.toString("base64"),
+      ciphertext: Buffer.from(ciphertext).toString("base64"),
+      nonce: Buffer.from(nonceBuffer).toString("base64"),
     };
   }
 
   /**
-   * Desencripta un mensaje usando AES-256-GCM
+   * Desencripta un mensaje usando ChaCha20-Poly1305
    */
   decryptMessage(
     ciphertext: string,
@@ -120,21 +98,10 @@ export class CryptoService {
     const keyBuffer = Buffer.from(sharedSecret, "base64");
     const nonceBuffer = Buffer.from(nonce, "base64");
 
-    const plaintext = Buffer.alloc(
-      ciphertextBuffer.length -
-        sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES,
-    );
+    const chacha = chacha20poly1305(keyBuffer, nonceBuffer);
+    const plaintext = chacha.decrypt(ciphertextBuffer);
 
-    sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
-      plaintext,
-      null, // No secret nonce
-      ciphertextBuffer,
-      null, // No additional data
-      nonceBuffer,
-      keyBuffer,
-    );
-
-    return plaintext.toString("utf8");
+    return Buffer.from(plaintext).toString("utf8");
   }
 
   /**
@@ -143,11 +110,9 @@ export class CryptoService {
   signMessage(message: string, secretKey: string): string {
     const messageBuffer = Buffer.from(message, "utf8");
     const secretKeyBuffer = Buffer.from(secretKey, "base64");
-    const signedMessage = Buffer.alloc(
-      messageBuffer.length + sodium.crypto_sign_BYTES,
-    );
-
-    sodium.crypto_sign(signedMessage, messageBuffer, secretKeyBuffer);
+    
+    const signature = ed25519.sign(messageBuffer, secretKeyBuffer);
+    const signedMessage = Buffer.concat([Buffer.from(signature), messageBuffer]);
 
     return signedMessage.toString("base64");
   }
@@ -159,13 +124,13 @@ export class CryptoService {
     try {
       const signedMessageBuffer = Buffer.from(signedMessage, "base64");
       const publicKeyBuffer = Buffer.from(publicKey, "base64");
-      const message = Buffer.alloc(
-        signedMessageBuffer.length - sodium.crypto_sign_BYTES,
-      );
-
-      sodium.crypto_sign_open(message, signedMessageBuffer, publicKeyBuffer);
-
-      return message.toString("utf8");
+      
+      const signature = signedMessageBuffer.subarray(0, 64); // Ed25519 signature is 64 bytes
+      const message = signedMessageBuffer.subarray(64);
+      
+      const isValid = ed25519.verify(signature, message, publicKeyBuffer);
+      
+      return isValid ? message.toString("utf8") : null;
     } catch (error) {
       this.logger.error("Signature verification failed", error);
       return null;
@@ -212,18 +177,15 @@ export class CryptoService {
   deriveMessageKey(sharedSecret: string, sequenceNumber: number): string {
     const key = Buffer.from(sharedSecret, "base64");
     const info = Buffer.from(`message_key_${sequenceNumber}`, "utf8");
-    const salt = Buffer.alloc(32); // Salt vacío
-
-    // Usamos crypto_generichash para derivar la clave
-    const derivedKey = Buffer.alloc(32); // 256 bits
+    
     const input = Buffer.concat([
       key,
       info,
       Buffer.from([sequenceNumber & 0xff]),
     ]);
 
-    sodium.crypto_generichash(derivedKey, input, salt);
+    const derivedKey = blake3(input, { dkLen: 32 });
 
-    return derivedKey.toString("base64");
+    return Buffer.from(derivedKey).toString("base64");
   }
 }
