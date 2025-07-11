@@ -14,4 +14,10 @@ export const AppDataSource = new DataSource({
   migrations: [__dirname + "/migrations/*.{ts,js}"],
   synchronize: false,
   logging: process.env.NODE_ENV === "development",
+  ssl: true,
+  extra: {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  },
 });
