@@ -4,6 +4,15 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Install build dependencies for native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    gcc \
+    libc-dev \
+    pkgconfig
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig*.json ./
@@ -27,8 +36,15 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nestjs -u 1001
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install curl for healthcheck and build dependencies for native modules
+RUN apk add --no-cache \
+    curl \
+    python3 \
+    make \
+    g++ \
+    gcc \
+    libc-dev \
+    pkgconfig
 
 # Copy package files
 COPY package*.json ./
@@ -51,4 +67,4 @@ EXPOSE 8080
 ENV PORT=8080
 
 # Start the application
-CMD ["npm", "run", "start:prod", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["node", "dist/main.js"]
