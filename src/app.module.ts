@@ -10,6 +10,8 @@ import { CryptoModule } from "./crypto/crypto.module";
 import { HealthController } from "./health/health.controller";
 import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
 
+console.log(process.env);
+
 @Module({
   imports: [
     ConfigModule.forRoot({
