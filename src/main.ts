@@ -18,7 +18,7 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-    }),
+    })
   );
 
   app.enableCors({
@@ -26,7 +26,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = process.env.PORT || 8080; // Default to 8080 for Cloud Run compatibility
+  const port = 8080; // Default to 8080 for Cloud Run compatibility
   const host = "0.0.0.0"; // Listen on all interfaces for Cloud Run
 
   if (process.env.NODE_ENV === "production") {
@@ -43,7 +43,7 @@ async function bootstrap() {
   console.log(`- Network: http://${host}:${port}`);
   console.log(`- Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(
-    `- Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:3000"}`,
+    `- Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:3000"}`
   );
 
   // Show network interfaces
@@ -53,7 +53,7 @@ async function bootstrap() {
     networkInterfaces[interfaceName]?.forEach((networkInterface) => {
       if (networkInterface.family === "IPv4" && !networkInterface.internal) {
         console.log(
-          `  * ${interfaceName}: http://${networkInterface.address}:${port}`,
+          `  * ${interfaceName}: http://${networkInterface.address}:${port}`
         );
       }
     });
