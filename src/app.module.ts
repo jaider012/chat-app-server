@@ -10,8 +10,6 @@ import { CryptoModule } from "./crypto/crypto.module";
 import { HealthController } from "./health/health.controller";
 import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
 
-console.log(process.env);
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,12 +22,12 @@ console.log(process.env);
       },
     ]),
     TypeOrmModule.forRoot({
-      type: process.env.DB_TYPE as "postgres",
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || "5432"),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      type: "postgres",
+      host: "10.65.240.3",
+      port: 5432,
+      username: "postgres",
+      password: ";}%0v&uid9a`^z5x",
+      database: "postgres",
       entities: [__dirname + "/**/*.entity{.ts,.js}"],
       migrations: [__dirname + "/migrations/*.{ts,js}"],
       synchronize: false,
